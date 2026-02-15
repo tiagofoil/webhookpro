@@ -68,10 +68,10 @@ export async function saveWebhook(
 }
 
 export async function getWebhooks(endpointId: string, limit = 50): Promise<Webhook[]> {
-  const data = await redis.get<string>(`webhooks:${endpointId}`)
+  const data = await redis.get(`webhooks:${endpointId}`)
   if (!data) return []
   try {
-    const webhooks: Webhook[] = JSON.parse(data)
+    const webhooks: Webhook[] = typeof data === 'string' ? JSON.parse(data) : data
     return webhooks.slice(0, limit)
   } catch {
     return []
