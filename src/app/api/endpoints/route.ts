@@ -6,7 +6,7 @@ export async function POST() {
     const endpointId = createEndpoint()
     return NextResponse.json({ 
       endpointId,
-      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://webhookpro.io'}/hook/${endpointId}`
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://webhookpro.vercel.app'}/api/webhook/${endpointId}`
     })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create endpoint' }, { status: 500 })

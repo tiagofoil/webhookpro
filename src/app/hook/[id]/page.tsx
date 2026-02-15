@@ -50,7 +50,7 @@ export default function WebhookPage() {
   }
 
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const webhookUrl = origin + '/hook/' + endpointId
+  const webhookUrl = origin + '/api/webhook/' + endpointId
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 p-4">
