@@ -56,38 +56,39 @@ export default function CodeBlock({
   const shouldCollapse = collapsible && lines.length > 10;
 
   return (
-    <div className="bg-[#0A0A0A] rounded-lg border border-[#333333] overflow-hidden">
-      {(title || shouldCollapse) && (
-        <div className="flex items-center justify-between px-4 py-2 bg-[#1E1E1E] border-b border-[#333333]">
-          {title && (
-            <span className="text-[#808080] text-sm font-medium">{title}</span>
+    <div className="bg-[#0A0A0A] rounded-lg border border-[#333333] overflow-hidden h-full flex flex-col">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#1E1E1E] border-b border-[#333333]">
+        {title ? (
+          <span className="text-[#808080] text-sm font-medium">{title}</span>
+        ) : (
+          <span className="text-[#808080] text-sm font-medium">JSON</span>
+        )}
+        <div className="flex items-center gap-2">
+          <CopyButton text={formattedCode} variant="ghost" size="sm" />
+          {shouldCollapse && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1.5 text-[#808080] hover:text-[#EAEAEA] transition-colors cursor-pointer"
+            >
+              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
           )}
-          <div className="flex items-center gap-2 ml-auto">
-            <CopyButton text={formattedCode} variant="ghost" size="sm" />
-            {shouldCollapse && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="p-1.5 text-[#808080] hover:text-[#EAEAEA] transition-colors cursor-pointer"
-              >
-                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-            )}
-          </div>
         </div>
-      )}
+      </div>
       
-      <pre 
-        className="p-4 text-sm font-mono overflow-x-auto leading-relaxed"
-        style={{ 
-          maxHeight: isExpanded ? maxHeight : '150px',
-          overflow: isExpanded ? 'auto' : 'hidden'
-        }}
-      >
-        <code 
-          dangerouslySetInnerHTML={{ __html: highlightCode(formattedCode) }}
-          className="font-mono"
-        />
-      </pre>
+      <div className="flex-1 overflow-hidden">
+        <pre 
+          className="p-4 text-sm font-mono overflow-auto leading-relaxed h-full"
+          style={{ 
+            maxHeight: isExpanded ? maxHeight : '150px'
+          }}
+        >
+          <code 
+            dangerouslySetInnerHTML={{ __html: highlightCode(formattedCode) }}
+            className="font-mono"
+          />
+        </pre>
+      </div>
     </div>
   );
 }

@@ -130,6 +130,7 @@ function WebhookCard({ webhook, isNew }: { webhook: Webhook; isNew?: boolean }) 
               </h4>
               <CodeBlock 
                 code={webhook.body} 
+                collapsible
                 maxHeight="200px"
               />
             </div>
