@@ -10,15 +10,15 @@ interface TerminalLine {
 }
 
 const terminalLines: TerminalLine[] = [
-  { type: 'command', content: '$ curl -X POST https://webhookpro.vercel.app/hook/abc123 \\\\', delay: 0 },
-  { type: 'command', content: '  -H "Content-Type: application/json" \\\\, delay: 100 },
-  { type: 'command', content: `  -d '{"action": "user.signup", "email": "dev@example.com"}'`, delay: 200 },
+  { type: 'command', content: '$ curl -X POST https://webhookpro.vercel.app/hook/abc123', delay: 0 },
+  { type: 'command', content: '    -H "Content-Type: application/json"', delay: 100 },
+  { type: 'command', content: '    -d {"action": "user.signup", "email": "dev@example.com"}', delay: 200 },
   { type: 'response', content: '{"success": true, "webhookId": "wh_7f8d9a2"}', delay: 800 },
-  { type: 'webhook', content: '→ Webhook received!', delay: 1200 },
+  { type: 'webhook', content: '-> Webhook received!', delay: 1200 },
   { type: 'webhook', content: 'Method: POST', delay: 1400 },
   { type: 'webhook', content: 'Headers: 12 captured', delay: 1600 },
   { type: 'webhook', content: 'Body: 78 bytes', delay: 1800 },
-  { type: 'success', content: '✓ View at: webhookpro.vercel.app/e/abc123', delay: 2200 },
+  { type: 'success', content: 'View at: webhookpro.vercel.app/e/abc123', delay: 2200 },
 ];
 
 export default function TerminalDemo() {
@@ -35,7 +35,6 @@ export default function TerminalDemo() {
       timeouts.push(timeout);
     });
 
-    // Loop the animation
     const resetTimeout = setTimeout(() => {
       setVisibleLines(0);
     }, 6000);
@@ -70,11 +69,9 @@ export default function TerminalDemo() {
 
   return (
     <div className="relative w-full max-w-2xl mx-auto">
-      {/* Glow effect */}
       <div className="absolute -inset-1 bg-gradient-to-r from-[#00D9FF]/20 to-[#10B981]/20 rounded-2xl blur-xl opacity-50 animate-pulse" />
       
       <div className="relative bg-[#141414] rounded-2xl border border-[#333333] overflow-hidden">
-        {/* Terminal header */}
         <div className="flex items-center gap-2 px-4 py-3 bg-[#1E1E1E] border-b border-[#333333]">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
@@ -91,7 +88,6 @@ export default function TerminalDemo() {
           </div>
         </div>
 
-        {/* Terminal content */}
         <div className="p-6 font-mono text-sm min-h-[320px]">
           {terminalLines.slice(0, visibleLines).map((line, index) => (
             <div 
@@ -110,7 +106,6 @@ export default function TerminalDemo() {
           )}
         </div>
 
-        {/* Status bar */}
         <div className="flex items-center justify-between px-4 py-2 bg-[#1E1E1E] border-t border-[#333333] text-xs">
           <div className="flex items-center gap-4">
             <span className="text-[#808080]">Ready</span>
