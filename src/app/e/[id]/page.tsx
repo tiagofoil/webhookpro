@@ -1,209 +1,336 @@
-'use client'
+'use client';
 
-import React, { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { 
+  Zap, 
+  Plus, 
+  Home, 
+  Clock, 
+  Globe, 
+  Monitor,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  CheckCircle,
+  Wifi
+} from 'lucide-react';
+import CopyButton from '@/components/ui/CopyButton';
+import CodeBlock from '@/components/ui/CodeBlock';
 
 interface Webhook {
-  id: string
-  endpointId: string
-  method: string
-  headers: Record<string, string>
-  body: string | null
-  query_params: Record<string, string>
-  ip_address: string
-  user_agent: string
-  created_at: string
+  id: string;
+  endpointId: string;
+  method: string;
+  headers: Record<string, string>;
+  body: string | null;
+  query_params: Record<string, string>;
+  ip_address: string;
+  user_agent: string;
+  created_at: string;
+}
+
+function MethodBadge({ method }: { method: string }) {
+  const methodClass = {
+    'POST': 'method-post',
+    'GET': 'method-get',
+    'PUT': 'method-put',
+    'DELETE': 'method-delete',
+    'PATCH': 'method-patch',
+  }[method] || 'badge bg-[#666666]/10 text-[#666666] border border-[#666666]/20 px-2 py-1 rounded text-xs font-medium';
+
+  return <span className={methodClass}>{method}</span>;
+}
+
+function WebhookCard({ webhook, isNew }: { webhook: Webhook; isNew?: boolean }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [copiedId, setCopiedId] = useState(false);
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'Unknown time';
+      return date.toLocaleString();
+    } catch {
+      return 'Unknown time';
+    }
+  };
+
+  const copyId = () => {
+    navigator.clipboard.writeText(webhook.id);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
+
+  return (
+    <div className={`card overflow-hidden transition-all duration-300 ${isNew ? 'animate-slide-in border-[#00D9FF]/30' : ''}`}>
+      {/* Header */}
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#1E1E1E]/50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-4">
+          <MethodBadge method={webhook.method} />
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              copyId();
+            }}
+            className="text-[#666666] hover:text-[#00D9FF] transition-colors font-mono text-sm"
+            title="Copy webhook ID"
+          >
+            {copiedId ? <CheckCircle size={14} className="text-[#10B981]" /> : webhook.id.slice(0, 8)}...
+          </button>
+          
+          <span className="text-[#808080] text-sm hidden sm:inline">{formatDate(webhook.created_at)}</span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4 text-sm text-[#666666]">
+            <span className="flex items-center gap-1">
+              <Globe size={14} />
+              {webhook.ip_address}
+            </span>
+            {webhook.user_agent && (
+              <span className="flex items-center gap-1 max-w-[200px] truncate">
+                <Monitor size={14} />
+                {webhook.user_agent.split('/')[0]}
+              </span>
+            )}
+          </div>
+          
+          <button className="text-[#666666] hover:text-[#EAEAEA] transition-colors">
+            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="p-4 border-t border-[#333333] space-y-4">
+          <div className="grid lg:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-[#808080] text-sm font-medium mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
+                Headers ({Object.keys(webhook.headers || {}).length})
+              </h4>              
+              <CodeBlock 
+                code={JSON.stringify(webhook.headers || {}, null, 2)} 
+                collapsible 
+                maxHeight="200px"
+              />
+            </div>
+
+            <div>
+              <h4 className="text-[#808080] text-sm font-medium mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                Body
+              </h4>
+              <CodeBlock 
+                code={webhook.body} 
+                maxHeight="200px"
+              />
+            </div>
+          </div>
+
+          {webhook.query_params && Object.keys(webhook.query_params).length > 0 && (
+            <div>
+              <h4 className="text-[#808080] text-sm font-medium mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                Query Parameters
+              </h4>
+              <CodeBlock 
+                code={JSON.stringify(webhook.query_params, null, 2)}
+                maxHeight="150px"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function EndpointPage() {
-  const params = useParams()
-  const router = useRouter()
-  const endpointId = params.id as string
-  const [webhooks, setWebhooks] = useState<Webhook[]>([])
-  const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
+  const params = useParams();
+  const router = useRouter();
+  const endpointId = params.id as string;
+  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [previousWebhookCount, setPreviousWebhookCount] = useState(0);
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const webhookUrl = origin + '/hook/' + endpointId
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const webhookUrl = origin + '/hook/' + endpointId;
+  const viewUrl = origin + '/e/' + endpointId;
 
   useEffect(() => {
     const fetchWebhooks = async () => {
       try {
-        const res = await fetch(`/api/endpoints/${endpointId}`)
-        const data = await res.json()
+        const res = await fetch(`/api/endpoints/${endpointId}`);
+        const data = await res.json();
         if (data.webhooks) {
-          setWebhooks(data.webhooks)
+          setPreviousWebhookCount(webhooks.length);
+          setWebhooks(data.webhooks);
         }
       } catch (error) {
-        console.error('Error:', error)
+        console.error('Error:', error);
       }
-      setLoading(false)
-    }
+      setLoading(false);
+    };
 
-    fetchWebhooks()
-    const interval = setInterval(fetchWebhooks, 2000)
-    return () => clearInterval(interval)
-  }, [endpointId])
+    fetchWebhooks();
+    const interval = setInterval(fetchWebhooks, 2000);
+    return () => clearInterval(interval);
+  }, [endpointId]);
 
-  const copyUrl = () => {
-    navigator.clipboard.writeText(webhookUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const createNew = async () => {
-    // Open in new tab
-    window.open('/', '_blank')
-  }
-
-  const formatJson = (str: string | null) => {
-    if (!str) return 'No body'
-    try {
-      return JSON.stringify(JSON.parse(str), null, 2)
-    } catch {
-      return str
-    }
-  }
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr)
-      if (isNaN(date.getTime())) return 'Unknown time'
-      return date.toLocaleString()
-    } catch {
-      return 'Unknown time'
-    }
-  }
+  const createNew = () => {
+    window.open('/', '_blank');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-white">Webhook Inspector</h1>
-            <span className="text-cyan-400 font-mono text-sm bg-cyan-500/20 px-3 py-1 rounded">
-              {endpointId}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={createNew}
-              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-            >
-              + New Webhook
-            </button>
-            <Link 
-              href="/" 
-              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-            >
-              Home
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <input
-              type="text"
-              value={webhookUrl}
-              readOnly
-              className="flex-1 bg-black/30 text-white px-4 py-3 rounded-lg font-mono text-sm"
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-            />
-            <button
-              onClick={copyUrl}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-3 rounded-lg min-w-[100px]"
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-          <p className="text-gray-400 mt-2 text-sm">
-            Send POST requests to this URL. Webhooks appear below automatically.
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="text-center text-gray-400 py-12">Loading webhooks...</div>
-        ) : webhooks.length === 0 ? (
-          <div className="bg-white/5 rounded-xl p-12 text-center">
-            <div className="text-gray-400 mb-4 text-lg">No webhooks captured yet</div>
-            
-            <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
-              <div className="bg-black/30 rounded-lg p-4 text-left">
-                <p className="mb-2 text-cyan-400 font-semibold">Mac/Linux:</p>
-                <code className="block text-sm text-gray-300 font-mono">
-                  curl -X POST {webhookUrl}<br/>
-                  &nbsp;&nbsp;-H &quot;Content-Type: application/json&quot;<br/>
-                  &nbsp;&nbsp;-d '{`{"test": "hello"}`}'
-                </code>
+    <div className="min-h-screen bg-[#0A0A0A]">
+      {/* Floating Navbar */}
+      <nav className="fixed top-4 left-4 right-4 z-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-[#141414]/80 backdrop-blur-xl rounded-2xl border border-[#333333] px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00D9FF] to-[#00B4D8] flex items-center justify-center">
+                    <Zap size={18} className="text-[#0A0A0A]" />
+                  </div>
+                  <span className="text-xl font-semibold text-[#EAEAEA] hidden sm:block">Webhook</span>
+                  <span className="text-xl font-semibold text-gradient hidden sm:block">Pro</span>
+                </Link>
+                
+                <div className="h-6 w-px bg-[#333333] mx-2" />
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-[#666666] text-sm hidden sm:inline">Endpoint</span>
+                  <span className="px-2 py-1 bg-[#1E1E1E] rounded-lg text-[#00D9FF] font-mono text-sm border border-[#333333]">
+                    {endpointId}
+                  </span>
+                </div>
               </div>
-              <div className="bg-black/30 rounded-lg p-4 text-left">
-                <p className="mb-2 text-cyan-400 font-semibold">Windows PowerShell:</p>
-                <code className="block text-sm text-gray-300 font-mono">
-                  Invoke-WebRequest -Uri &quot;{webhookUrl}&quot; `<br/>
-                  &nbsp;&nbsp;-Method POST `<br/>
-                  &nbsp;&nbsp;-ContentType &quot;application/json&quot; `<br/>
-                  &nbsp;&nbsp;-Body '{`{"test": "hello"}`}'
-                </code>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={createNew}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  <Plus size={16} />
+                  <span className="hidden sm:inline">New Webhook</span>
+                </button>
+                
+                <Link 
+                  href="/" 
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  <Home size={16} />
+                </Link>
               </div>
             </div>
-            
-            <p className="text-gray-500 mt-4 text-sm">This page updates automatically every 2 seconds</p>
           </div>
-        ) : (
-          <div className="space-y-4">
+        </div>
+      </nav>
+
+      <div className="pt-28 pb-12 px-4">
+        <div className="max-w-5xl mx-auto">
+          {/* URL Card */}
+          <div className="card p-6 mb-6 glow-cyan">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Captured Webhooks ({webhooks.length})</h2>
-              <span className="text-gray-400 text-sm">Auto-updating every 2s</span>
-            </div>
-            
-            {webhooks.map((webhook) => (
-              <div key={webhook.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <div className="flex items-center gap-4 mb-4 flex-wrap">
-                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                    webhook.method === 'POST' ? 'bg-green-500/20 text-green-400' :
-                    webhook.method === 'GET' ? 'bg-blue-500/20 text-blue-400' :
-                    webhook.method === 'DELETE' ? 'bg-red-500/20 text-red-400' :
-                    'bg-yellow-500/20 text-yellow-400'
-                  }`}>
-                    {webhook.method}
-                  </span>
-                  <span className="text-gray-400 text-sm">
-                    {formatDate(webhook.created_at)}
-                  </span>
-                  <span className="text-gray-500 text-sm font-mono">{webhook.ip_address}</span>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-white font-semibold mb-2 text-sm">Headers</h3>
-                    <pre className="bg-black/30 rounded-lg p-3 text-xs text-gray-300 overflow-auto max-h-48">
-                      {JSON.stringify(webhook.headers || {}, null, 2)}
-                    </pre>
-                  </div>
-
-                  <div>
-                    <h3 className="text-white font-semibold mb-2 text-sm">Body</h3>
-                    <pre className="bg-black/30 rounded-lg p-3 text-xs text-gray-300 overflow-auto max-h-48">
-                      {formatJson(webhook.body)}
-                    </pre>
-                  </div>
-                </div>
-
-                {webhook.query_params && Object.keys(webhook.query_params).length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-white font-semibold mb-2 text-sm">Query Params</h3>
-                    <pre className="bg-black/30 rounded-lg p-3 text-xs text-gray-300">
-                      {JSON.stringify(webhook.query_params, null, 2)}
-                    </pre>
-                  </div>
-                )}
+              <h2 className="text-lg font-semibold text-[#EAEAEA] flex items-center gap-2">
+                <Wifi size={18} className="text-[#10B981]" />
+                Your Webhook URL
+              </h2>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                <span className="text-[#10B981]">Listening</span>
               </div>
-            ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={webhookUrl}
+                readOnly
+                className="flex-1 input-mono text-base"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <CopyButton text={webhookUrl} variant="primary" size="lg" />
+            </div>
+
+            <div className="mt-4 grid md:grid-cols-2 gap-4 p-4 bg-[#0A0A0A] rounded-lg border border-[#333333]">
+              <div>
+                <p className="text-[#666666] text-sm mb-2">Mac/Linux:</p>
+                <code className="text-sm font-mono text-[#808080] block">
+                  curl -X POST {webhookUrl}<br/>
+                  &nbsp;&nbsp;-H "Content-Type: application/json"<br/>
+                  &nbsp;&nbsp;-d '&#123;"test": "hello"&#125;'
+                </code>
+              </div>
+              <div>
+                <p className="text-[#666666] text-sm mb-2">Windows PowerShell:</p>
+                <code className="text-sm font-mono text-[#808080] block">
+                  Invoke-WebRequest -Uri "{webhookUrl}"<br/>
+                  &nbsp;&nbsp;-Method POST -ContentType<br/>
+                  &nbsp;&nbsp;"application/json" -Body '&#123;"test": "hello"&#125;'
+                </code>
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Webhooks List */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[#EAEAEA]">
+                Captured Webhooks
+                {webhooks.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-[#1E1E1E] rounded-lg text-[#808080] text-sm">
+                    {webhooks.length}
+                  </span>
+                )}
+              </h2>
+              <div className="flex items-center gap-2 text-sm text-[#666666]">
+                <Clock size={14} />
+                <span>Auto-updating every 2s</span>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="card p-12 text-center">
+                <div className="w-8 h-8 border-2 border-[#333333] border-t-[#00D9FF] rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-[#808080]">Loading webhooks...</p>
+              </div>
+            ) : webhooks.length === 0 ? (
+              <div className="card p-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-[#1E1E1E] flex items-center justify-center mx-auto mb-4">
+                  <Wifi size={24} className="text-[#666666]" />
+                </div>
+                <p className="text-xl font-semibold text-[#EAEAEA] mb-2">No webhooks captured yet</p>
+                <p className="text-[#808080] mb-6">Send a POST request to your webhook URL to see it here.</p>
+                
+                <div className="flex items-center justify-center gap-2 text-sm text-[#666666]">
+                  <Clock size={14} />
+                  <span>This page updates automatically</span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {webhooks.map((webhook, index) => (
+                  <WebhookCard 
+                    key={webhook.id} 
+                    webhook={webhook}
+                    isNew={index === 0 && webhooks.length > previousWebhookCount}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
-  )
+  );
 }
