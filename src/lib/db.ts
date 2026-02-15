@@ -39,6 +39,14 @@ export async function saveWebhook(
   ipAddress: string,
   userAgent: string
 ): Promise<string> {
+  // Auto-create endpoint if it doesn't exist
+  const endpointExists = await redis.get<string>(`endpoint:${endpointId}`)
+  if (!endpointExists) {
+    const endpoint: Endpoint = { id: endpointId, createdAt: new Date().toISOString() }
+    await redis.set(`endpoint:${endpointId}`, JSON.stringify(endpoint))
+    await redis.set(`webhooks:${endpointId}`, JSON.stringify([]))
+  }
+
   const id = Math.random().toString(36).substring(2, 18)
   const webhook: Webhook = {
     id,
