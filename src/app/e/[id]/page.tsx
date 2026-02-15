@@ -111,40 +111,38 @@ function WebhookCard({ webhook, isNew }: { webhook: Webhook; isNew?: boolean }) 
       <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="p-4 border-t border-[#333333] space-y-4">
           <div className="grid lg:grid-cols-2 gap-4">
-            <div>
+            <div className="h-[300px]">
               <h4 className="text-[#808080] text-sm font-medium mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
                 Headers ({Object.keys(webhook.headers || {}).length})
               </h4>              
               <CodeBlock 
                 code={JSON.stringify(webhook.headers || {}, null, 2)} 
-                collapsible 
-                maxHeight="200px"
+                maxHeight="260px"
               />
             </div>
 
-            <div>
+            <div className="h-[300px]">
               <h4 className="text-[#808080] text-sm font-medium mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#10B981]" />
                 Body
               </h4>
               <CodeBlock 
                 code={webhook.body} 
-                collapsible
-                maxHeight="200px"
+                maxHeight="260px"
               />
             </div>
           </div>
 
           {webhook.query_params && Object.keys(webhook.query_params).length > 0 && (
-            <div>
+            <div className="h-[200px]">
               <h4 className="text-[#808080] text-sm font-medium mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
                 Query Parameters
               </h4>
               <CodeBlock 
                 code={JSON.stringify(webhook.query_params, null, 2)}
-                maxHeight="150px"
+                maxHeight="160px"
               />
             </div>
           )}

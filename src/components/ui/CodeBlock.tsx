@@ -1,14 +1,12 @@
 'use client';
 
+import { Copy } from 'lucide-react';
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import CopyButton from './CopyButton';
 
 interface CodeBlockProps {
   code: string | null;
   language?: string;
   title?: string;
-  collapsible?: boolean;
   maxHeight?: string;
 }
 
@@ -16,22 +14,25 @@ export default function CodeBlock({
   code, 
   language = 'json', 
   title,
-  collapsible = false,
   maxHeight = '300px'
 }: CodeBlockProps) {
-  const [isExpanded, setIsExpanded] = useState(!collapsible);
+  const [copied, setCopied] = useState(false);
 
   if (!code || code === 'No body') {
     return (
-      <div className="bg-[#0A0A0A] rounded-lg p-4 text-[#666666] text-sm font-mono">
-        No body
+      <div className="bg-[#0A0A0A] rounded-lg border border-[#333333] overflow-hidden h-full flex flex-col">
+        <div className="flex items-center justify-between px-4 py-2 bg-[#1E1E1E] border-b border-[#333333]">
+          <span className="text-[#808080] text-sm font-medium">{title || 'JSON'}</span>
+        </div>
+        <div className="flex-1 p-4 text-[#666666] text-sm font-mono">
+          No body
+        </div>
       </div>
     );
   }
 
   const formatCode = (str: string): string => {
     try {
-      // Try to parse and re-format JSON
       const parsed = JSON.parse(str);
       return JSON.stringify(parsed, null, 2);
     } catch {
@@ -40,9 +41,8 @@ export default function CodeBlock({
   };
 
   const highlightCode = (str: string) => {
-    // Simple syntax highlighting
     let highlighted = str
-      .replace(/["&;]([^"&;]*)["&;]/g, '<span class="json-string">&quot;$1&quot;</span>')
+      .replace(/["\u0026;]([^"\u0026;]*)["\u0026;]/g, '<span class="json-string">&quot;$1&quot;</span>')
       .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
       .replace(/\b(null)\b/g, '<span class="json-null">$1</span>')
       .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="json-number">$1</span>')
@@ -52,36 +52,39 @@ export default function CodeBlock({
   };
 
   const formattedCode = formatCode(code);
-  const lines = formattedCode.split('\n');
-  const shouldCollapse = collapsible && lines.length > 10;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(formattedCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
     <div className="bg-[#0A0A0A] rounded-lg border border-[#333333] overflow-hidden h-full flex flex-col">
       <div className="flex items-center justify-between px-4 py-2 bg-[#1E1E1E] border-b border-[#333333]">
-        {title ? (
-          <span className="text-[#808080] text-sm font-medium">{title}</span>
-        ) : (
-          <span className="text-[#808080] text-sm font-medium">JSON</span>
-        )}
-        <div className="flex items-center gap-2">
-          <CopyButton text={formattedCode} variant="ghost" size="sm" />
-          {shouldCollapse && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1.5 text-[#808080] hover:text-[#EAEAEA] transition-colors cursor-pointer"
-            >
-              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
+        <span className="text-[#808080] text-sm font-medium">{title || 'JSON'}</span>
+        
+        <button
+          onClick={handleCopy}
+          className="p-1.5 text-[#808080] hover:text-[#EAEAEA] transition-colors cursor-pointer"
+          title="Copy to clipboard"
+        >
+          {copied ? (
+            <span className="text-[#10B981] text-xs">Copied!</span>
+          ) : (
+            <Copy size={16} />
           )}
-        </div>
+        </button>
       </div>
       
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         <pre 
-          className="p-4 text-sm font-mono overflow-auto leading-relaxed h-full"
-          style={{ 
-            maxHeight: isExpanded ? maxHeight : '150px'
-          }}
+          className="p-4 text-sm font-mono leading-relaxed"
+          style={{ maxHeight }}
         >
           <code 
             dangerouslySetInnerHTML={{ __html: highlightCode(formattedCode) }}
