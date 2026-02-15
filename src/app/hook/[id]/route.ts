@@ -57,7 +57,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Redirect to the page.tsx for GET requests
+  // Redirect to the inspector view page
   const { id } = await params
-  return NextResponse.redirect(new URL(`/hook/${id}?view=inspector`, request.url))
+  return NextResponse.redirect(new URL(`/view/${id}`, request.url))
 }
