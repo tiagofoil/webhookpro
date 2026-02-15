@@ -3,8 +3,8 @@ import { createEndpoint } from '@/lib/db'
 
 export async function POST() {
   try {
-    const endpointId = createEndpoint()
-    return NextResponse.json({ 
+    const endpointId = await createEndpoint()
+    return NextResponse.json({
       endpointId,
       url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://webhookpro.vercel.app'}/api/webhook/${endpointId}`
     })

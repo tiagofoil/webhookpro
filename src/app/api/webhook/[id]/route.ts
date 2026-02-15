@@ -69,7 +69,7 @@ async function handleWebhook(
     const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
-    const webhookId = saveWebhook(
+    const webhookId = await saveWebhook(
       endpointId,
       method,
       headers,
