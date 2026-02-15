@@ -330,6 +330,31 @@ export default function EndpointPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="py-8 px-4 border-t border-[#1E1E1E] mt-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00D9FF] to-[#00B4D8] flex items-center justify-center">
+                <Zap size={18} className="text-[#0A0A0A]" />
+              </div>
+              <span className="text-[#EAEAEA] font-semibold">WebhookPro</span>
+              <span className="text-[#666666] text-sm">MIT License</span>
+            </div>
+            
+            <a
+              href="https://www.buymeacoffee.com/tiagofoil"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-[#FFDD00] text-[#0A0A0A] rounded-lg text-sm font-semibold hover:brightness-110 transition-all"
+            >
+              <span>☕</span>
+              <span>Buy me a coffee</span>
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

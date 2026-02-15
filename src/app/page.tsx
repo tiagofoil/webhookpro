@@ -270,9 +270,18 @@ export default function Home() {
               >
                 <Github size={20} />
               </a>
+              <a
+                href="https://www.buymeacoffee.com/tiagofoil"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-[#FFDD00] text-[#0A0A0A] rounded-lg text-sm font-semibold hover:brightness-110 transition-all"
+              >
+                <span>☕</span>
+                <span>Buy me a coffee</span>
+              </a>
             </div>
             
-            <p className="text-[#666666] text-sm">© 2025 WebhookPro. Open source.</p>
+            <p className="text-[#666666] text-sm">© 2025 WebhookPro. MIT License</p>
           </div>
         </div>
       </footer>
