@@ -1,75 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Terminal, Wifi, CheckCircle } from 'lucide-react';
 
-interface TerminalLine {
-  type: 'command' | 'response' | 'webhook' | 'success';
-  content: string;
-  delay: number;
-}
-
-const terminalLines: TerminalLine[] = [
-  { type: 'command', content: '$ curl -X POST https://webhookpro.vercel.app/hook/abc123', delay: 0 },
-  { type: 'command', content: '    -H "Content-Type: application/json"', delay: 100 },
-  { type: 'command', content: '    -d {"action": "user.signup", "email": "dev@example.com"}', delay: 200 },
-  { type: 'response', content: '{"success": true, "webhookId": "wh_7f8d9a2"}', delay: 800 },
-  { type: 'webhook', content: '-> Webhook received!', delay: 1200 },
-  { type: 'webhook', content: 'Method: POST', delay: 1400 },
-  { type: 'webhook', content: 'Headers: 12 captured', delay: 1600 },
-  { type: 'webhook', content: 'Body: 78 bytes', delay: 1800 },
-  { type: 'success', content: 'View at: webhookpro.vercel.app/e/abc123', delay: 2200 },
-];
-
 export default function TerminalDemo() {
-  const [visibleLines, setVisibleLines] = useState<number>(0);
-  const [showCursor, setShowCursor] = useState(true);
-
-  useEffect(() => {
-    let timeouts: NodeJS.Timeout[] = [];
-    
-    terminalLines.forEach((line, index) => {
-      const timeout = setTimeout(() => {
-        setVisibleLines(index + 1);
-      }, line.delay);
-      timeouts.push(timeout);
-    });
-
-    const resetTimeout = setTimeout(() => {
-      setVisibleLines(0);
-    }, 6000);
-    timeouts.push(resetTimeout);
-
-    return () => {
-      timeouts.forEach(clearTimeout);
-    };
-  }, [visibleLines]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowCursor(prev => !prev);
-    }, 530);
-    return () => clearInterval(interval);
-  }, []);
-
-  const getLineColor = (type: TerminalLine['type']) => {
-    switch (type) {
-      case 'command':
-        return 'text-[#EAEAEA]';
-      case 'response':
-        return 'text-[#808080]';
-      case 'webhook':
-        return 'text-[#00D9FF]';
-      case 'success':
-        return 'text-[#10B981]';
-      default:
-        return 'text-[#EAEAEA]';
-    }
-  };
-
   return (
     <div className="relative w-full max-w-2xl mx-auto">
-      <div className="absolute -inset-1 bg-gradient-to-r from-[#00D9FF]/20 to-[#10B981]/20 rounded-2xl blur-xl opacity-50 animate-pulse" />
+      <div className="absolute -inset-1 bg-gradient-to-r from-[#00D9FF]/20 to-[#10B981]/20 rounded-2xl blur-xl opacity-50" />
       
       <div className="relative bg-[#141414] rounded-2xl border border-[#333333] overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 bg-[#1E1E1E] border-b border-[#333333]">
@@ -88,29 +24,29 @@ export default function TerminalDemo() {
           </div>
         </div>
 
-        <div className="p-6 font-mono text-sm min-h-[320px]">
-          {terminalLines.slice(0, visibleLines).map((line, index) => (
-            <div 
-              key={index}
-              className={`${getLineColor(line.type)} mb-1 animate-slide-in flex items-center gap-2`}
-            >
-              {line.type === 'success' && <CheckCircle size={14} />}
-              <span>{line.content}</span>
-            </div>
-          ))}
+        <div className="p-6 font-mono text-sm min-h-[280px]">
+          <div className="text-[#EAEAEA] mb-1">$ curl -X POST https://webhookpro.vercel.app/hook/demo123</div>
+          <div className="text-[#EAEAEA] mb-1">    -H "Content-Type: application/json"</div>
+          <div className="text-[#EAEAEA] mb-3">    -d '&#123;"event": "payment.success"&#125;'</div>
           
-          {visibleLines < terminalLines.length && (
-            <span 
-              className={`inline-block w-2.5 h-5 bg-[#00D9FF] ml-1 ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity`}
-            />
-          )}
+          <div className="text-[#808080] mb-3">&#123;"success": true, "webhookId": "wh_abc123"&#125;</div>
+          
+          <div className="text-[#00D9FF] mb-1">→ Webhook captured!</div>
+          <div className="text-[#00D9FF] mb-1">  Method: POST</div>
+          <div className="text-[#00D9FF] mb-1">  Headers: 12 captured</div>
+          <div className="text-[#00D9FF] mb-3">  Body: 156 bytes</div>
+          
+          <div className="text-[#10B981] flex items-center gap-2">
+            <CheckCircle size={14} />
+            <span>View at: webhookpro.vercel.app/e/demo123</span>
+          </div>
         </div>
 
         <div className="flex items-center justify-between px-4 py-2 bg-[#1E1E1E] border-t border-[#333333] text-xs">
           <div className="flex items-center gap-4">
             <span className="text-[#808080]">Ready</span>
             <span className="text-[#333333]">|</span>
-            <span className="text-[#00D9FF]">Listening on /hook/abc123</span>
+            <span className="text-[#00D9FF]">Listening on /hook/demo123</span>
           </div>
           <div className="text-[#666666]">UTF-8</div>
         </div>
