@@ -3,10 +3,11 @@ import { getWebhooks } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const webhooks = getWebhooks(params.id, 100)
+    const { id } = await params
+    const webhooks = getWebhooks(id, 100)
     return NextResponse.json({ webhooks })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch webhooks' }, { status: 500 })

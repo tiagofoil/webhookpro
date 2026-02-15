@@ -3,37 +3,42 @@ import { saveWebhook } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return handleWebhook(request, params.id, 'GET')
+  const { id } = await params
+  return handleWebhook(request, id, 'GET')
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return handleWebhook(request, params.id, 'POST')
+  const { id } = await params
+  return handleWebhook(request, id, 'POST')
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return handleWebhook(request, params.id, 'PUT')
+  const { id } = await params
+  return handleWebhook(request, id, 'PUT')
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return handleWebhook(request, params.id, 'DELETE')
+  const { id } = await params
+  return handleWebhook(request, id, 'DELETE')
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return handleWebhook(request, params.id, 'PATCH')
+  const { id } = await params
+  return handleWebhook(request, id, 'PATCH')
 }
 
 async function handleWebhook(
