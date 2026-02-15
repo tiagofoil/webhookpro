@@ -1,52 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveWebhook } from '@/lib/db'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  return handleWebhook(request, id, 'GET')
-}
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params
-  return handleWebhook(request, id, 'POST')
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  return handleWebhook(request, id, 'PUT')
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  return handleWebhook(request, id, 'DELETE')
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  return handleWebhook(request, id, 'PATCH')
-}
-
-async function handleWebhook(
-  request: NextRequest,
-  endpointId: string,
-  method: string
-) {
   try {
+    const { id: endpointId } = await params
+    
     const headers: Record<string, string> = {}
     request.headers.forEach((value, key) => {
       headers[key] = value
@@ -71,7 +32,7 @@ async function handleWebhook(
 
     const webhookId = await saveWebhook(
       endpointId,
-      method,
+      'POST',
       headers,
       body,
       queryParams,
@@ -90,4 +51,13 @@ async function handleWebhook(
       error: 'Failed to capture webhook' 
     }, { status: 500 })
   }
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  // Redirect to the page.tsx for GET requests
+  const { id } = await params
+  return NextResponse.redirect(new URL(`/hook/${id}?view=inspector`, request.url))
 }

@@ -90,7 +90,7 @@ export default function Home() {
 
 function WebhookList({ endpointId }: { endpointId: string }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const webhookUrl = origin + '/api/webhook/' + endpointId
+  const webhookUrl = origin + '/hook/' + endpointId
   
   return (
     <div className="text-gray-400 text-center py-8">
