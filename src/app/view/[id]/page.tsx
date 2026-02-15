@@ -114,7 +114,7 @@ export default function WebhookPage() {
                   <div>
                     <h3 className="text-white font-semibold mb-2">Headers</h3>
                     <pre className="bg-black/30 rounded-lg p-3 text-xs text-gray-300 overflow-auto max-h-48">
-                      {JSON.stringify(webhook.headers, null, 2)}
+                      {JSON.stringify(webhook.headers || {}, null, 2)}
                     </pre>
                   </div>
 
@@ -126,11 +126,11 @@ export default function WebhookPage() {
                   </div>
                 </div>
 
-                {Object.keys(webhook.query_params).length > 0 && (
+                {webhook.query_params && Object.keys(webhook.query_params).length > 0 && (
                   <div className="mt-4">
                     <h3 className="text-white font-semibold mb-2">Query Params</h3>
                     <pre className="bg-black/30 rounded-lg p-3 text-xs text-gray-300">
-                      {JSON.stringify(webhook.query_params, null, 2)}
+                      {JSON.stringify(webhook.query_params || {}, null, 2)}
                     </pre>
                   </div>
                 )}
