@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Webhook {
   id: string
@@ -17,6 +18,7 @@ interface Webhook {
 
 export default function EndpointPage() {
   const params = useParams()
+  const router = useRouter()
   const endpointId = params.id as string
   const [webhooks, setWebhooks] = useState<Webhook[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,7 +42,7 @@ export default function EndpointPage() {
     }
 
     fetchWebhooks()
-    const interval = setInterval(fetchWebhooks, 2000) // Poll every 2 seconds
+    const interval = setInterval(fetchWebhooks, 2000)
     return () => clearInterval(interval)
   }, [endpointId])
 
@@ -48,6 +50,11 @@ export default function EndpointPage() {
     navigator.clipboard.writeText(webhookUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const createNew = async () => {
+    // Open in new tab
+    window.open('/', '_blank')
   }
 
   const formatJson = (str: string | null) => {
@@ -59,12 +66,40 @@ export default function EndpointPage() {
     }
   }
 
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return 'Unknown time'
+      return date.toLocaleString()
+    } catch {
+      return 'Unknown time'
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-white">Webhook Inspector</h1>
-          <div className="text-cyan-400 font-mono text-sm">{endpointId}</div>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-white">Webhook Inspector</h1>
+            <span className="text-cyan-400 font-mono text-sm bg-cyan-500/20 px-3 py-1 rounded">
+              {endpointId}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={createNew}
+              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+            >
+              + New Webhook
+            </button>
+            <Link 
+              href="/" 
+              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+            >
+              Home
+            </Link>
+          </div>
         </div>
 
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
@@ -93,14 +128,27 @@ export default function EndpointPage() {
         ) : webhooks.length === 0 ? (
           <div className="bg-white/5 rounded-xl p-12 text-center">
             <div className="text-gray-400 mb-4 text-lg">No webhooks captured yet</div>
-            <div className="bg-black/30 rounded-lg p-4 font-mono text-sm text-gray-300 max-w-lg mx-auto text-left">
-              <p className="mb-2 text-cyan-400">Send a test webhook:</p>
-              <code className="block">
-                curl -X POST {webhookUrl} <br/>
-                &nbsp;&nbsp;-H "Content-Type: application/json" <br/>
-                &nbsp;&nbsp;-d {`'{"test": "hello"}'`}
-              </code>
+            
+            <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+              <div className="bg-black/30 rounded-lg p-4 text-left">
+                <p className="mb-2 text-cyan-400 font-semibold">Mac/Linux:</p>
+                <code className="block text-sm text-gray-300 font-mono">
+                  curl -X POST {webhookUrl}<br/>
+                  &nbsp;&nbsp;-H &quot;Content-Type: application/json&quot;<br/>
+                  &nbsp;&nbsp;-d '{`{"test": "hello"}`}'
+                </code>
+              </div>
+              <div className="bg-black/30 rounded-lg p-4 text-left">
+                <p className="mb-2 text-cyan-400 font-semibold">Windows PowerShell:</p>
+                <code className="block text-sm text-gray-300 font-mono">
+                  Invoke-WebRequest -Uri &quot;{webhookUrl}&quot; `<br/>
+                  &nbsp;&nbsp;-Method POST `<br/>
+                  &nbsp;&nbsp;-ContentType &quot;application/json&quot; `<br/>
+                  &nbsp;&nbsp;-Body '{`{"test": "hello"}`}'
+                </code>
+              </div>
             </div>
+            
             <p className="text-gray-500 mt-4 text-sm">This page updates automatically every 2 seconds</p>
           </div>
         ) : (
@@ -112,7 +160,7 @@ export default function EndpointPage() {
             
             {webhooks.map((webhook) => (
               <div key={webhook.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-4 mb-4 flex-wrap">
                   <span className={`px-3 py-1 rounded-full text-sm font-bold ${
                     webhook.method === 'POST' ? 'bg-green-500/20 text-green-400' :
                     webhook.method === 'GET' ? 'bg-blue-500/20 text-blue-400' :
@@ -122,7 +170,7 @@ export default function EndpointPage() {
                     {webhook.method}
                   </span>
                   <span className="text-gray-400 text-sm">
-                    {new Date(webhook.created_at).toLocaleString()}
+                    {formatDate(webhook.created_at)}
                   </span>
                   <span className="text-gray-500 text-sm font-mono">{webhook.ip_address}</span>
                 </div>
