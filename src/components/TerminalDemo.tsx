@@ -11,10 +11,10 @@ interface TerminalLine {
 
 const terminalLines: TerminalLine[] = [
   { type: 'command', content: '$ curl -X POST https://webhookpro.vercel.app/hook/abc123 \\\\', delay: 0 },
-  { type: 'command', content: '  -H "Content-Type: application/json" \\\\', delay: 100 },
-  { type: 'command', content: "  -d '{"action": "user.signup", "email": "dev@example.com"}'", delay: 200 },
+  { type: 'command', content: '  -H "Content-Type: application/json" \\\\, delay: 100 },
+  { type: 'command', content: `  -d '{"action": "user.signup", "email": "dev@example.com"}'`, delay: 200 },
   { type: 'response', content: '{"success": true, "webhookId": "wh_7f8d9a2"}', delay: 800 },
-  { type: 'webhook', content: '⚡ Webhook received!', delay: 1200 },
+  { type: 'webhook', content: '→ Webhook received!', delay: 1200 },
   { type: 'webhook', content: 'Method: POST', delay: 1400 },
   { type: 'webhook', content: 'Headers: 12 captured', delay: 1600 },
   { type: 'webhook', content: 'Body: 78 bytes', delay: 1800 },
