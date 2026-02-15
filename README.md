@@ -1,12 +1,3 @@
-# WebhookPro - Deploy attempt 21:14# Deploy 1771103746
-deploy 1771103776
-1771103837
-1771103959
-fix 1771104059
-1771108241
-1771108414
-1771108608
-1771108851
-1771109148
-deploy 1771109308
-git fix 1771109630
+# WebhookPro
+
+A Next.js webhook management application.
