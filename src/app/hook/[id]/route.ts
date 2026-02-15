@@ -59,5 +59,5 @@ export async function GET(
 ) {
   // Redirect to the inspector view page
   const { id } = await params
-  return NextResponse.redirect(new URL(`/view/${id}`, request.url))
+  return NextResponse.redirect(new URL(`/e/${id}`, request.url))
 }
