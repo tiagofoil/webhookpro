@@ -11,20 +11,20 @@ type Webhook = {
   method: string
   headers: Record<string, string>
   body: string | null
-  queryParams: Record<string, string>
-  ipAddress: string
-  userAgent: string
-  createdAt: string
+  query_params: Record<string, string>
+  ip_address: string
+  user_agent: string
+  created_at: string
 }
 
 type Endpoint = {
   id: string
-  createdAt: string
+  created_at: string
 }
 
 export async function createEndpoint(): Promise<string> {
   const id = Math.random().toString(36).substring(2, 18)
-  const endpoint: Endpoint = { id, createdAt: new Date().toISOString() }
+  const endpoint: Endpoint = { id, created_at: new Date().toISOString() }
   await redis.set(`endpoint:${id}`, JSON.stringify(endpoint))
   await redis.set(`webhooks:${id}`, JSON.stringify([]))
   return id
@@ -42,7 +42,7 @@ export async function saveWebhook(
   // Auto-create endpoint if it doesn't exist
   const endpointExists = await redis.get<string>(`endpoint:${endpointId}`)
   if (!endpointExists) {
-    const endpoint: Endpoint = { id: endpointId, createdAt: new Date().toISOString() }
+    const endpoint: Endpoint = { id: endpointId, created_at: new Date().toISOString() }
     await redis.set(`endpoint:${endpointId}`, JSON.stringify(endpoint))
     await redis.set(`webhooks:${endpointId}`, JSON.stringify([]))
   }
@@ -54,10 +54,10 @@ export async function saveWebhook(
     method,
     headers,
     body,
-    queryParams,
-    ipAddress,
-    userAgent,
-    createdAt: new Date().toISOString()
+    query_params: queryParams,
+    ip_address: ipAddress,
+    user_agent: userAgent,
+    created_at: new Date().toISOString()
   }
   
   const existing = await getWebhooks(endpointId, 100)
