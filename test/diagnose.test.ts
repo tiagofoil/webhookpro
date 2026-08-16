@@ -1,7 +1,40 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { hostOf, explainFetchFailure } from '../src/lib/redis-config.ts'
+import { hostOf, explainFetchFailure, isStorageUnavailable } from '../src/lib/redis-config.ts'
+
+describe('isStorageUnavailable', () => {
+  test('recognises the deleted-database case seen in production', () => {
+    const err = new Error('fetch failed', {
+      cause: Object.assign(new Error('getaddrinfo ENOTFOUND x.upstash.io'), { code: 'ENOTFOUND' }),
+    })
+    assert.equal(isStorageUnavailable(err), true)
+  })
+
+  test('recognises a connect timeout', () => {
+    const err = new Error('boom', {
+      cause: Object.assign(new Error('t'), { code: 'UND_ERR_CONNECT_TIMEOUT' }),
+    })
+    assert.equal(isStorageUnavailable(err), true)
+  })
+
+  // A real application bug must keep returning 500, not be masked as a 503.
+  test('does not classify an application bug as unavailable storage', () => {
+    assert.equal(isStorageUnavailable(new TypeError("x.map is not a function")), false)
+  })
+
+  test('does not classify an auth rejection as unavailable storage', () => {
+    assert.equal(isStorageUnavailable(new Error('WRONGPASS invalid token')), false)
+  })
+
+  test('handles non-error values and cause loops', () => {
+    const err: Error & { cause?: unknown } = new Error('fetch failed')
+    err.cause = err
+    assert.equal(isStorageUnavailable(err), true)
+    assert.equal(isStorageUnavailable(null), false)
+    assert.equal(isStorageUnavailable('nope'), false)
+  })
+})
 
 describe('hostOf', () => {
   test('returns the hostname, which is not a secret', () => {

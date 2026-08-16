@@ -106,6 +106,35 @@ export function explainFetchFailure(error: unknown): string {
   return detail || 'unknown error'
 }
 
+const NETWORK_CODES = new Set([
+  'ENOTFOUND',
+  'EAI_AGAIN',
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'EHOSTUNREACH',
+  'UND_ERR_CONNECT_TIMEOUT',
+  'UND_ERR_HEADERS_TIMEOUT',
+])
+
+/**
+ * True when the storage backend could not be reached at all, as opposed to an
+ * application bug. Lets a route answer 503 ("come back later") instead of a
+ * generic 500 that tells the user nothing.
+ */
+export function isStorageUnavailable(error: unknown): boolean {
+  const seen = new Set<unknown>()
+  let current: unknown = error
+  while (current instanceof Error && !seen.has(current)) {
+    seen.add(current)
+    const code = (current as { code?: unknown }).code
+    if (typeof code === 'string' && NETWORK_CODES.has(code)) return true
+    if (current.message === 'fetch failed') return true
+    current = (current as { cause?: unknown }).cause
+  }
+  return false
+}
+
 export function resolveRedisConfig(env: Env = process.env): RedisConfig {
   for (const [urlKey, tokenKey] of CREDENTIAL_CANDIDATES) {
     const url = clean(env[urlKey])

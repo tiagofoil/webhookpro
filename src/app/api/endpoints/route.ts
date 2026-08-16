@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createEndpoint } from '@/lib/db'
-import { RedisConfigError } from '@/lib/redis-config'
+import { RedisConfigError, isStorageUnavailable } from '@/lib/redis-config'
 
 export async function POST() {
   try {
@@ -14,15 +14,23 @@ export async function POST() {
     // Previously swallowed: the generic 500 hid a storage misconfiguration and
     // left nothing in the logs to debug with.
     console.error('Create endpoint error:', error)
-    const isConfigError = error instanceof RedisConfigError
-    return NextResponse.json(
-      {
-        error: isConfigError
-          ? 'Storage is not configured. See /api/health.'
-          : 'Failed to create endpoint',
-        ...(isConfigError ? { detail: error.message } : {}),
-      },
-      { status: isConfigError ? 503 : 500 }
-    )
+
+    if (error instanceof RedisConfigError) {
+      return NextResponse.json(
+        { error: 'Storage is not configured. See /api/health.', detail: error.message },
+        { status: 503 }
+      )
+    }
+
+    // Reachability failures are not application bugs. Say so, and keep the
+    // hostname-level diagnosis in /api/health rather than in a public response.
+    if (isStorageUnavailable(error)) {
+      return NextResponse.json(
+        { error: 'Storage is unavailable. See /api/health.' },
+        { status: 503 }
+      )
+    }
+
+    return NextResponse.json({ error: 'Failed to create endpoint' }, { status: 500 })
   }
 }
