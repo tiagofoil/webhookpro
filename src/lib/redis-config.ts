@@ -56,6 +56,56 @@ export function describeRedisEnv(env: Env = process.env): Array<{
   }))
 }
 
+/**
+ * The hostname of the REST endpoint. Safe to report: it identifies *which*
+ * database is configured, while the token (the actual secret) stays hidden.
+ */
+export function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return 'unparseable'
+  }
+}
+
+/**
+ * `fetch failed` is a dead end on its own. Node buries the actual reason in the
+ * `cause` chain, so we walk it and translate the common codes into something
+ * that says what to actually go and fix.
+ */
+export function explainFetchFailure(error: unknown): string {
+  const codes: string[] = []
+  const messages: string[] = []
+  const seen = new Set<unknown>()
+
+  let current: unknown = error
+  while (current && !seen.has(current)) {
+    seen.add(current)
+    if (current instanceof Error) {
+      if (current.message) messages.push(current.message)
+      const code = (current as { code?: unknown }).code
+      if (typeof code === 'string') codes.push(code)
+      current = (current as { cause?: unknown }).cause
+    } else {
+      messages.push(String(current))
+      break
+    }
+  }
+
+  const detail = [...new Set([...messages, ...codes])].join(' <- ')
+
+  if (codes.includes('ENOTFOUND') || codes.includes('EAI_AGAIN')) {
+    return `${detail}. The host does not resolve in DNS, so the Upstash database no longer exists (deleted or the integration was removed, leaving a stale URL). Recreate the database and update the env vars.`
+  }
+  if (codes.includes('ECONNREFUSED') || codes.includes('ECONNRESET')) {
+    return `${detail}. The host resolves but refuses the connection, so the database is likely paused or suspended.`
+  }
+  if (codes.includes('CERT_HAS_EXPIRED') || codes.some((c) => c.startsWith('ERR_TLS'))) {
+    return `${detail}. TLS handshake failed against the Upstash host.`
+  }
+  return detail || 'unknown error'
+}
+
 export function resolveRedisConfig(env: Env = process.env): RedisConfig {
   for (const [urlKey, tokenKey] of CREDENTIAL_CANDIDATES) {
     const url = clean(env[urlKey])

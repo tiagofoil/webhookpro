@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis'
-import { resolveRedisConfig } from './redis-config'
+import { resolveRedisConfig, hostOf, explainFetchFailure } from './redis-config'
 
 let client: Redis | null = null
 
@@ -11,7 +11,14 @@ let client: Redis | null = null
 function getRedis(): Redis {
   if (!client) {
     const { url, token } = resolveRedisConfig()
-    client = new Redis({ url, token })
+    // The default of 6 retries turns an unreachable host into a ~4.7s hang on
+    // every single request. Two attempts keeps resilience against a blip while
+    // letting a genuinely dead database fail fast.
+    client = new Redis({
+      url,
+      token,
+      retry: { retries: 2, backoff: (attempt) => Math.min(200 * 2 ** attempt, 800) },
+    })
   }
   return client
 }
@@ -88,13 +95,22 @@ export async function saveWebhook(
  * Verifies the Redis connection. Returns a diagnosis instead of throwing so a
  * health endpoint can report *why* storage is down without exposing secrets.
  */
-export async function checkRedis(): Promise<{ ok: boolean; source?: string; error?: string }> {
+export async function checkRedis(): Promise<{
+  ok: boolean
+  source?: string
+  host?: string
+  error?: string
+}> {
+  let source: string | undefined
+  let host: string | undefined
   try {
-    const { source } = resolveRedisConfig()
+    const config = resolveRedisConfig()
+    source = config.source
+    host = hostOf(config.url)
     await getRedis().ping()
-    return { ok: true, source }
+    return { ok: true, source, host }
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    return { ok: false, source, host, error: explainFetchFailure(error) }
   }
 }
 
