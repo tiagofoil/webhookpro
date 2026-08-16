@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --import ./test/ts-resolve.mjs --test test/*.test.ts",
+    "test:e2e": "node test/e2e-smoke.mjs && node test/e2e-misconfig.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.36.2",

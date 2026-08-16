@@ -1,9 +1,26 @@
 import { Redis } from '@upstash/redis'
+import { resolveRedisConfig } from './redis-config'
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
-})
+let client: Redis | null = null
+
+/**
+ * Built lazily so a missing credential surfaces as a clear RedisConfigError at
+ * request time, instead of crashing the build or silently constructing a client
+ * with an empty URL (which failed only after ~4.3s of retry backoff).
+ */
+function getRedis(): Redis {
+  if (!client) {
+    const { url, token } = resolveRedisConfig()
+    client = new Redis({ url, token })
+  }
+  return client
+}
+
+const redis = {
+  get: <T>(key: string) => getRedis().get<T>(key),
+  set: (key: string, value: string) => getRedis().set(key, value),
+  ping: () => getRedis().ping(),
+}
 
 type Webhook = {
   id: string
@@ -65,6 +82,20 @@ export async function saveWebhook(
   await redis.set(`webhooks:${endpointId}`, JSON.stringify(existing.slice(0, 100)))
   
   return id
+}
+
+/**
+ * Verifies the Redis connection. Returns a diagnosis instead of throwing so a
+ * health endpoint can report *why* storage is down without exposing secrets.
+ */
+export async function checkRedis(): Promise<{ ok: boolean; source?: string; error?: string }> {
+  try {
+    const { source } = resolveRedisConfig()
+    await getRedis().ping()
+    return { ok: true, source }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) }
+  }
 }
 
 export async function getWebhooks(endpointId: string, limit = 50): Promise<Webhook[]> {
