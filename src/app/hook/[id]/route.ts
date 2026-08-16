@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveWebhook } from '@/lib/db'
+import { sanitizeCapturedHeaders } from '@/lib/capture-headers'
 
 export async function POST(
   request: NextRequest,
@@ -8,10 +9,13 @@ export async function POST(
   try {
     const { id: endpointId } = await params
     
-    const headers: Record<string, string> = {}
+    const rawHeaders: Record<string, string> = {}
     request.headers.forEach((value, key) => {
-      headers[key] = value
+      rawHeaders[key] = value
     })
+    // The inspector page is public, and Vercel's proxy injects credentials for
+    // this deployment into every inbound request. Never persist those.
+    const headers = sanitizeCapturedHeaders(rawHeaders)
 
     const url = new URL(request.url)
     const queryParams: Record<string, string> = {}

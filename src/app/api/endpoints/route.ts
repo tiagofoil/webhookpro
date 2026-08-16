@@ -1,14 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createEndpoint } from '@/lib/db'
 import { RedisConfigError, isStorageUnavailable } from '@/lib/redis-config'
+import { resolveAppOrigin } from '@/lib/app-origin'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const endpointId = await createEndpoint()
+    const origin = resolveAppOrigin(request.headers)
     return NextResponse.json({
       endpointId,
-      viewUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://webhookpro.vercel.app'}/e/${endpointId}`,
-      webhookUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://webhookpro.vercel.app'}/hook/${endpointId}`
+      viewUrl: `${origin}/e/${endpointId}`,
+      webhookUrl: `${origin}/hook/${endpointId}`
     })
   } catch (error) {
     // Previously swallowed: the generic 500 hid a storage misconfiguration and
